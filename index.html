@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consulta CEP</title>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+#resultado {
+    margin-top: 20px;
+}
+
+p {
+    margin-bottom: 10px;
+}
+
+strong {
+    font-weight: bold;
+    color: #333;
+}
+
+</style>
+<script>
+    function consultarCEP() {
+        var cep = document.getElementById("cep").value;
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "https://viacep.com.br/ws/" + cep + "/xml/", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var xmlResponse = xhr.responseXML;
+                var localidade = xmlResponse.getElementsByTagName("localidade")[0].textContent;
+                //document.getElementById("resultado").innerText = "Localidade: " + localidade;
+                console.log("Localidade: " + localidade)
+                consultarClima(localidade);
+            }
+        };
+        xhr.send();
+    }
+
+    function consultarClima(cidade) {
+            //var cidade = document.getElementById("cidade").value;
+            var apiKey = "bb7de0c14d09f7713834893e623b82a4";
+            var url = "https://api.openweathermap.org/data/2.5/weather?q=" + cidade + "&appid=" + apiKey + "&lang=pt_br";
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na solicitação. Status do erro: ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    var descricao = data.weather[0].description;
+                    var temperatura = data.main.temp;
+                    var umidade = data.main.humidity;
+                    var vento = data.wind.speed;
+                    var resultado = `
+                        <p><strong>Cidade:</strong> ${cidade}</p>
+                        <p><strong>Descrição:</strong> ${descricao}</p>
+                        <p><strong>Temperatura:</strong> ${temperatura}°C</p>
+                        <p><strong>Umidade:</strong> ${umidade}%</p>
+                        <p><strong>Vento:</strong> ${vento} m/s</p>
+                    `;
+                    document.getElementById("resultado").innerHTML = resultado;
+                })
+                .catch(error => console.error("Erro ao consultar clima:", error));
+        }
+</script>
+</head>
+<body>
+    <h1>Integração entre duas APIs, consulta de clima por CEP</h1>
+    <label for="cep">CEP:</label>
+    <input type="text" id="cep" placeholder="Digite o CEP">
+    <button onclick="consultarCEP()">Consultar</button>
+    <div id="resultado"></div>
+</body>
+</html>
